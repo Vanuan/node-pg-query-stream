@@ -22,13 +22,15 @@ var pg = require('pg')
 var QueryStream = require('pg-query-stream')
 var JSONStream = require('JSONStream')
 
+var client = new pg.Client(process.env.PG_CONNECTION_STRING);
+
 //pipe 1,000,000 rows to stdout without blowing up your memory usage
-pg.connect(function(err, client, done) {
+client.connect(function(err) {
   if(err) throw err;
   var query = new QueryStream('SELECT * FROM generate_series(0, $1) num', [1000000])
   var stream = client.query(query)
   //release the client when the stream is finished
-  stream.on('end', done)
+  stream.on('close', fucntion() { client.end(); })
   stream.pipe(JSONStream.stringify()).pipe(process.stdout)
 })
 ```
